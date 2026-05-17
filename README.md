@@ -50,3 +50,13 @@ According to your requirements and research on the codebase, I will implement:
 - /v2/public
 - /v2/public/contents <- enumerated by conventions
 ```
+
+## Implementations
+
+### Active Interception
+
+Integrated into the agentic tool via SDK. Intercept the prompt before sending it to the agent, parse the tags, and inject the tag content into the prompt.
+
+### Passive MCP
+
+A "tags" mcp exposing tool `parse_tags` to the agent. The agent calls it if tag patterns are recognized.
