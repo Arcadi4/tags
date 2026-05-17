@@ -1,0 +1,13 @@
+# ts
+node_modules
+dist
+
+# agents
+.claude
+.codex
+.pi
+.windsurf
+.kiro
+.opencode
+.sisyphus
+.agents/skills
