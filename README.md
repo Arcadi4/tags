@@ -31,7 +31,22 @@ for the user.
 <explore>
 Explore the codebase to clarify the mentioned concept.
 </explore>
-Implement a management API with endpoints of /v2/admin, /v2/auth, /v2/public,
+Implement a new management API with endpoints of /v2/admin, /v2/auth, /v2/public,
 etc. <generalize/>. The existing OAuth <explore/> should be compatible with the new API.
 ```
 
+The answer should look like:
+
+```text
+According to your requirements and research on the codebase, I will implement:
+
+- /v2/admin
+- /v2/admin/management <- enumerated by conventions
+- /v2/auth
+- /v2/auth/login
+- /v2/auth/logout
+- /v2/auth/legacy <- according to the codebase evidence on OAuth
+- /v2/users <- inferred from gap-analysis/skill usage
+- /v2/public
+- /v2/public/contents <- enumerated by conventions
+```
