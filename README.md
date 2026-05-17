@@ -60,3 +60,5 @@ Integrated into the agentic tool via SDK. Intercept the prompt before sending it
 ### Passive MCP
 
 A "tags" mcp exposing tool `parse_tags` to the agent. The agent calls it if tag patterns are recognized.
+
+> Yes, you might have realized that this approach repeats the prompt 3 times in total... But, I have to emphasize that, according to [this research](https://arxiv.org/abs/2512.14982), repeating the prompt is one of the simplest ways to boost model performance.
