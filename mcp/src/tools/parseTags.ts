@@ -24,7 +24,8 @@ export function registerParseTagsTool(server: McpServer, deps: ParseTagsDeps = {
     "parse_tags",
     {
       title: "Parse Tags",
-      description: "Rewrite a user prompt by expanding #tag markers using markdown tag definitions discovered from BOTH ~/.agents/tags/ (global) and <workspace>/.agents/tags/ (workspace; overrides global on key collision). Each referenced tag's body is injected once at the top inside <tag>...</tag>; each in-prose #tag becomes <tag/> at its location. Tags inside fenced code blocks (```...```) and inline code spans (`...`) are preserved unchanged. Unknown tags are left as-is. Both #tag_name and #tag-name resolve to the same definition.",
+      description:
+        "Rewrite a user prompt by expanding #tag markers using markdown or plain text tag definitions discovered from BOTH ~/.agents/tags/ (global) and <workspace>/.agents/tags/ (workspace; overrides global on key collision). Each referenced tag's body is injected once at the top inside <tag>...</tag>; each in-prose #tag becomes <tag/> at its location. Tags inside fenced code blocks (```...```) and inline code spans (`...`) are preserved unchanged. Unknown tags are left as-is. Both #tag_name and #tag-name resolve to the same definition.",
       inputSchema: parseTagsInputShape,
       outputSchema: parseTagsOutputShape,
       annotations: {

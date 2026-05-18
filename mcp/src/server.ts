@@ -22,11 +22,11 @@ async function buildInstructions(workspace: string): Promise<string> {
   const tags = await source.list();
   const intro =
     "This server expands inline #tag markers in user prompts into XML directives. " +
-    "Tags are atomic, composable, location-aware. Each tag is a markdown file: " +
-    "global tags at ~/.agents/tags/<name>.md, workspace tags at <workspace>/.agents/tags/<name>.md " +
+    "Tags are atomic, composable, location-aware. Each tag is a markdown or plain text file: " +
+    "global tags at ~/.agents/tags/<name>.md|txt, workspace tags at <workspace>/.agents/tags/<name>.md|txt " +
     "(workspace overrides global on name collision).";
   const directive =
-    "When a user prompt contains any #tag-name marker (outside fenced code blocks or inline code spans), " +
+    "When a user prompt contains any #tag-name marker (underscores are tolerated, e.g., #my_tag), " +
     "call the parse_tags tool with the workspace path and the raw prompt; " +
     "use its rewritten_prompt as the effective prompt.";
   const tagList = tags.length === 0

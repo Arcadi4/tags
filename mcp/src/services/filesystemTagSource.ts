@@ -15,7 +15,9 @@ export class FilesystemTagSource implements TagSource {
 
   constructor(private readonly tagsDir: string) {
     if (!isAbsolute(tagsDir)) {
-      throw new Error("FilesystemTagSource requires an absolute tags directory");
+      throw new Error(
+        "FilesystemTagSource requires an absolute tags directory",
+      );
     }
   }
 
@@ -45,9 +47,12 @@ export class FilesystemTagSource implements TagSource {
     }
 
     for (const entry of entries) {
-      if (!entry.endsWith(TAG_FILE_EXT)) continue;
+      if (!TAG_FILE_EXT.some((ext) => entry.endsWith(ext))) continue;
 
-      const rawName = entry.slice(0, -TAG_FILE_EXT.length);
+      const rawName = entry.slice(
+        0,
+        -TAG_FILE_EXT.find((ext) => entry.endsWith(ext))!.length,
+      );
       if (!rawName) continue;
 
       const key = normalizeTagKey(rawName);
