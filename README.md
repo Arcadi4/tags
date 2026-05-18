@@ -118,7 +118,7 @@ Tags are released with several built-in tags for your out-of-the-box experience:
 | `#explore` | You want the agent to search the codebase for this part. |
 | `#example` | When you are giving examples and want the agent to infer your intent based on them. |
 | `#use-skill` | When you want the agent to use one specific or relevant skill. |
-| `#btw` | To mark an information as worth knowing but insignificant to the current discussion. |
+| `#btw` | For an incidental aside that should inform context without becoming a new request or topic switch. |
 
 You can turn them off by using the command `npx -y @agent-tags/mcp --no-builtin-tags` to start the MCP. Or, you can override these tags by writing your own global tag with the same name.
 

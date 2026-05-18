@@ -27,7 +27,7 @@ export const BUILTIN_TAGS: TagDef[] = [
   },
   {
     key: "btw",
-    body: "This is a side note from the main thread of conversation. Make a response if necessary, but do not let it take up more than 10% of your output or distract from the main task unless it is directly relevant.",
+    body: "Use this as an incidental aside to the current thought. Keep it as background context if it helps interpretation, but continue with the main request. Do not answer it separately, reprioritize around it, or treat it as a topic switch unless the user explicitly follows up on it.",
     rawName: "btw",
     sourcePath: "builtin:btw",
   },
