@@ -126,6 +126,8 @@ You can turn them off by using the command `npx -y @agent-tags/mcp --no-builtin-
 
 A tag is a `.md` or `.txt` file placed under `.agents/tags`. The filename is the tag name, and the file's content will be the tag body. It is recommended that each tag body does not exceed 600 characters.
 
+Tags are shipped with a tag creation guide to agents. You can just ask your agent to create tags for you.
+
 ### Global Tags
 
 These tags will always be discovered and loaded. Add global tags by adding files under `~/.agents/tags`. For Windows users, it is `C:\Users\UserName\.agents\tags`.
