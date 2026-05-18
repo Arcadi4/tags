@@ -33,21 +33,18 @@ etc. <generalize/>. The existing OAuth <explore/> should be compatible with the 
 
 Tags are injected exactly where they are called, making it a precise annotation to your original prompt.
 
-We can expect these from the agent:
+We can expect something like this from the agent:
 
-```text
-According to your requirements and research on the codebase, I will implement:
-
-- /v2/admin
-- /v2/admin/management <- enumerated by conventions
-- /v2/auth
-- /v2/auth/login
-- /v2/auth/logout
-- /v2/auth/legacy <- according to the codebase evidence on OAuth
-- /v2/users <- inferred from gap-analysis/skill usage
-- /v2/public
-- /v2/public/contents <- enumerated by conventions
-```
+> According to your requirements and research on the codebase, I will implement:
+> - /v2/admin
+> - /v2/admin/management <- enumerated by conventions
+> - /v2/auth
+> - /v2/auth/login
+> - /v2/auth/logout
+> - /v2/auth/legacy <- according to the codebase evidence on OAuth
+> - /v2/users <- inferred from gap-analysis/skill usage
+> - /v2/public
+> - /v2/public/contents <- enumerated by conventions
 
 ## Getting Started
 
