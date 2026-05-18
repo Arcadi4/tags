@@ -1,6 +1,6 @@
 {
   "name": "@agent-tags/mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Tags are active, composable, and atomic agent directions.",
   "homepage": "https://github.com/Arcadi4/tags#readme",
   "bugs": {
@@ -15,7 +15,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "tags-mcp": "dist/index.js"
+    "tags-mcp": "./dist/index.js"
   },
   "files": [
     "dist",
