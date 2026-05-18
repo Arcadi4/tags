@@ -11,7 +11,7 @@ Tags are designed to work together with skills (or slash commands). While skills
 - All tags are composable; you can combine as many tags as you want in one prompt.
 - Each tag represents an atomic intent; they do not interfere with each other and confuse the agent.
 
-## How This Works
+## How Tags Work
 
 The original prompt with tags:
 
@@ -35,7 +35,9 @@ Implement a new management API with endpoints of /v2/admin, /v2/auth, /v2/public
 etc. <generalize/>. The existing OAuth <explore/> should be compatible with the new API.
 ```
 
-The answer should look like:
+As you can see, tags are injected exactly where they are called. This allows it to be a precise punctuation on your prompt.
+
+We can expect these from the agent:
 
 ```text
 According to your requirements and research on the codebase, I will implement:
@@ -51,14 +53,66 @@ According to your requirements and research on the codebase, I will implement:
 - /v2/public/contents <- enumerated by conventions
 ```
 
-## Implementations
+## Getting Started
 
-### Active Interception
+### OpenCode
 
-Integrated into the agentic tool via SDK. Intercept the prompt before sending it to the agent, parse the tags, and inject the tag content into the prompt.
+Add the following (or similar) to your OpenCode config:
 
-### Passive MCP
+```jsonc
+// opencode.json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "tags": {
+      "type": "local",
+      "command": ["npx", "-y", "@agent-tags/mcp@latest"]
+    }
+  }
+}
+```
 
-A "tags" mcp exposing tool `parse_tags` to the agent. The agent calls it if tag patterns are recognized.
+Or, use `opencode mcp add` and follow the guide to add a local MCP server. The full command is `npx -y @agent-tags/mcp@latest`.
 
-> Yes, you might have realized that this approach repeats the prompt 3 times in total... But, I have to emphasize that, according to [this research](https://arxiv.org/abs/2512.14982), repeating the prompt is one of the simplest ways to boost model performance.
+### Claude Code
+
+```bash
+claude mcp add tags --scope user npx @agent-tags/mcp@latest
+```
+
+### Codex
+
+```bash
+codex mcp add tags -- npx @agent-tags/mcp@latest
+```
+
+### Gemini CLI
+
+```bash
+gemini mcp add tags npx @agent-tags/mcp@latest
+```
+
+### Qoder
+
+```bash
+qodercli mcp add -s user tags -- npx @agent-tags/mcp@latest
+```
+
+### Most Agents
+
+Add the following (or similar) to your agent's config file:
+
+```json
+{
+  "mcpServers": {
+    "tags": {
+      "command": "npx",
+      "args": ["-y", "@agent-tags/mcp@latest"]
+    }
+  }
+}
+```
+
+## SDK
+
+Integrate tags into the agentic tools via SDK. Intercept the prompt before it is sent, parse and inject tags. This would be a more graceful solution. Coming soon, if we receive positive community responses.
