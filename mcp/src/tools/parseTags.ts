@@ -14,6 +14,14 @@ import { BUILTIN_TAGS } from "../builtinTags.js";
 export interface ParseTagsDeps {
   sourceFactory?: (workspace: string) => TagSource;
   useBuiltinTags?: boolean;
+  /**
+   * Workspace path used to enumerate tag keys at registration time so the
+   * tool description can list available tags inline. The MCP `instructions`
+   * field is dropped by some clients (e.g. OpenCode), so we bake the
+   * protocol contract and tag inventory into the tool description — the
+   * one MCP-to-model channel that every known client preserves verbatim.
+   */
+  workspace?: string;
 }
 
 function defaultSourceFactory(workspace: string, useBuiltinTags: boolean): TagSource {
@@ -29,51 +37,131 @@ function defaultSourceFactory(workspace: string, useBuiltinTags: boolean): TagSo
   return new MergedTagSource(sources);
 }
 
-export function registerParseTagsTool(
+async function buildToolDescription(
+  workspace: string | undefined,
+  factory: (workspace: string) => TagSource,
+): Promise<string> {
+  let availableTagsLine =
+    "AVAILABLE TAGS: enumerated at runtime from ~/.agents/tags and <workspace>/.agents/tags.";
+  if (workspace) {
+    try {
+      const source = factory(workspace);
+      const tags = await source.list();
+      availableTagsLine =
+        tags.length === 0
+          ? "AVAILABLE TAGS: none currently defined. Still call this tool every turn — definitions can change between turns."
+          : "AVAILABLE TAGS: " +
+            tags
+              .map((t) => t.key)
+              .sort()
+              .join(", ") +
+            ". Tag set is dynamic — call the tool every turn rather than relying on this list.";
+    } catch {
+      // Fall back to generic line if enumeration fails (filesystem race, permissions, etc.).
+    }
+  }
+
+  return [
+    "Expand inline `#tag` markers in a user prompt into XML directives. For each recognized `#name` in prose, the tool injects `<name>...body...</name>` once at the top of the rewritten prompt and replaces each `#name` with a self-closing `<name/>` at its original location. Tags inside fenced code blocks (```) and inline code spans (`) are preserved verbatim. Unknown `#tags` (no matching definition) pass through unchanged. `#tag_name` and `#tag-name` resolve to the same definition. Returns the literal sentinel \"(no tags found)\" when no recognized `#tag` markers appear in prose.",
+    "",
+    "EXAMPLES:",
+    "",
+    "  user: ok thanks, continue",
+    "  call: parse_tags(workspace, \"ok thanks, continue\")",
+    "  result: (no tags found)",
+    "",
+    "  user: walk me through how the prompt rewriter handles edge cases #explore",
+    "  call: parse_tags(workspace, \"walk me through how the prompt rewriter handles edge cases #explore\")",
+    "  result:",
+    "    <explore>...explore body...</explore>",
+    "",
+    "    walk me through how the prompt rewriter handles edge cases <explore/>",
+    "",
+    "  user: explain how this server discovers tag definitions",
+    "  call: parse_tags(workspace, \"explain how this server discovers tag definitions\")",
+    "  result: (no tags found)",
+    "",
+    "  user: what's the #deny tag for?",
+    "  call: parse_tags(workspace, \"what's the #deny tag for?\")",
+    "  result:",
+    "    <deny>...deny body...</deny>",
+    "",
+    "    what's the <deny/> tag for?",
+    "",
+    "  user: Compare FilesystemTagSource and MergedTagSource #explore. The merging behavior #fyi is intentional.",
+    "  call: parse_tags(workspace, \"Compare FilesystemTagSource and MergedTagSource #explore. The merging behavior #fyi is intentional.\")",
+    "  result:",
+    "    <explore>...explore body...</explore>",
+    "    <fyi>...fyi body...</fyi>",
+    "",
+    "    Compare FilesystemTagSource and MergedTagSource <explore/>. The merging behavior <fyi/> is intentional.",
+    "",
+    "  user: just answer directly, no tools — what's the difference between #fyi and #btw?",
+    "  call: parse_tags(workspace, \"just answer directly, no tools — what's the difference between #fyi and #btw?\")",
+    "  result:",
+    "    <fyi>...fyi body...</fyi>",
+    "    <btw>...btw body...</btw>",
+    "",
+    "    just answer directly, no tools — what's the difference between <fyi/> and <btw/>?",
+    "",
+    "  user: add a tag for discarding objects (file/function/modules etc. #example)",
+    "  call: parse_tags(workspace, \"add a tag for discarding objects (file/function/modules etc. #example)\")",
+    "  result:",
+    "    <example>...example body...</example>",
+    "",
+    "    add a tag for discarding objects (file/function/modules etc. <example/>)",
+    "",
+    "  user (code fence with tag inside):",
+    "    ```",
+    "    # comment containing #fyi",
+    "    ```",
+    "    what does the snippet do?",
+    "  call: parse_tags(workspace, <verbatim including the code fence>)",
+    "  result: (no tags found)        # tags inside code fences are escape hatches, not directives",
+    "",
+    "  user: explain the `TAG_REGEX` const, reference it with #explore",
+    "  call: parse_tags(workspace, \"explain the `TAG_REGEX` const, reference it with #explore\")",
+    "  result:",
+    "    <explore>...explore body...</explore>",
+    "",
+    "    explain the `TAG_REGEX` const, reference it with <explore/>",
+    "",
+    "  user: I want to use #somemadeuptagname here",
+    "  call: parse_tags(workspace, \"I want to use #somemadeuptagname here\")",
+    "  result: I want to use #somemadeuptagname here     # unknown tag passes through unchanged, no header injected",
+    "",
+    "INPUTS:",
+    "- prompt: the user's verbatim message for the turn. Pass it unmodified — the rewriter relies on the literal text, including code fences and inline code spans, to decide what to expand and what to preserve.",
+    "- workspace: absolute path to the user's project root. Used to load workspace-scoped tag definitions (which override global tags on name collision).",
+    "",
+    "OUTPUT:",
+    "- For tag-bearing prompts: the rewritten prompt with `<name>...body...</name>` directive blocks prepended and `<name/>` placeholders in prose at the original locations. Each `<name/>` directive applies at the location it appears, not globally.",
+    "- For tag-free prompts: the literal sentinel string \"(no tags found)\".",
+    "- For prompts with only unknown `#tags`: the prompt is returned unchanged, with the `#name` markers preserved verbatim.",
+    "",
+    "BOUNDARY:",
+    "- The tool's rewritten output is the single source of truth for tag bodies. Read the injected `<name>...body...</name>` content rather than guessing what each tag means.",
+    "",
+    availableTagsLine,
+  ].join("\n");
+}
+
+export async function registerParseTagsTool(
   server: McpServer,
   deps: ParseTagsDeps = {},
-): void {
+): Promise<void> {
   const useBuiltinTags = deps.useBuiltinTags ?? true;
   const factory =
     deps.sourceFactory ??
     ((workspace: string) => defaultSourceFactory(workspace, useBuiltinTags));
 
+  const description = await buildToolDescription(deps.workspace, factory);
+
   server.registerTool(
     "parse_tags",
     {
       title: "Parse Tags",
-      description: [
-        "Expand inline #tag markers in a user prompt into XML directives that carry each tag's full definition body. This tool is the protocol contract for the tags system — bypass it and the user's intent is silently dropped.",
-        "",
-        "WHEN TO CALL:",
-        "- Call on every user turn, before forming any response or invoking any other tool.",
-        "- Call even when no `#` character is visible in the prompt — definitions may live in code spans you should not pre-judge, and missed calls break the protocol.",
-        "- Call with the user's verbatim prompt; do not pre-strip, summarize, or rewrite it.",
-        "",
-        "WHAT IT DOES:",
-        "- Discovers tag definitions from ~/.agents/tags/ (global) and <workspace>/.agents/tags/ (workspace; overrides global on name collision).",
-        "- For each referenced tag, injects its body once at the top inside <name>...body...</name>.",
-        "- Replaces each in-prose #name marker with a self-closing <name/> at its original location, marking the scope where the user invoked that directive.",
-        "- Preserves tags inside fenced code blocks (```...```) and inline code spans (`...`) verbatim — those are escape hatches.",
-        "- Leaves unknown #tags unchanged. Both #tag_name and #tag-name resolve to the same key.",
-        "",
-        "OUTPUT:",
-        "- Returns the rewritten prompt as text. If the prompt contains no recognized #tag markers in prose, returns the literal sentinel \"(no tags found)\" — treat that as a no-op and proceed with the original prompt.",
-        "- Otherwise, the rewritten prompt is the effective prompt for this turn. Honor each <name/> directive at the location it appears, not globally.",
-        "",
-        "EXAMPLE:",
-        "  Input prompt: \"Implement /v2/admin and /v2/auth, etc. #generalize. The OAuth #explore should be compatible.\"",
-        "  Output:",
-        "    <generalize>...generalize body...</generalize>",
-        "    <explore>...explore body...</explore>",
-        "",
-        "    Implement /v2/admin and /v2/auth, etc. <generalize/>. The OAuth <explore/> should be compatible.",
-        "",
-        "DO NOT:",
-        "- Do not expand, infer, or paraphrase tag bodies yourself — the tool is the single source of truth.",
-        "- Do not skip the call because a prompt \"looks tag-free\"; the regex catches cases you may miss.",
-        "- Do not invent meaning for unknown tags that pass through unchanged.",
-      ].join("\n"),
+      description,
       inputSchema: parseTagsInputShape,
       outputSchema: parseTagsOutputShape,
       annotations: {
