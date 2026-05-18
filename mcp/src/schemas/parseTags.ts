@@ -1,17 +1,17 @@
 import { z } from "zod";
 
-// Raw shape (preferred form for registerTool)
 export const parseTagsInputShape = {
-  workspace: z
-    .string()
-    .min(1)
-    .describe(
-      "Absolute path to the user's current workspace. Used to load workspace-scoped tag definitions from <workspace>/.agents/tags/, which override global tags on name collision. Pass the project root the user is working in; do not invent or guess a path.",
-    ),
   prompt: z
     .string()
     .describe(
       "The user's verbatim raw prompt for this turn. Pass it unmodified — do not strip the leading verb, summarize, paraphrase, or pre-expand any #tag markers. The tool relies on the literal text, including code fences and inline code spans, to decide what to expand and what to preserve.",
+    ),
+  workspace: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Optional absolute path to the user's current workspace. When omitted, the server-startup workspace is used (the directory the MCP server was launched from, or the path provided via --workspace / TAGS_WORKSPACE). Workspace-scoped tag definitions in <workspace>/.agents/tags/ override global tags on name collision.",
     ),
 };
 
@@ -23,6 +23,5 @@ export const parseTagsOutputShape = {
     ),
 };
 
-// Type aliases derived from the shapes for handler typing.
 export type ParseTagsInput = { [K in keyof typeof parseTagsInputShape]: z.infer<typeof parseTagsInputShape[K]> };
 export type ParseTagsOutput = { [K in keyof typeof parseTagsOutputShape]: z.infer<typeof parseTagsOutputShape[K]> };

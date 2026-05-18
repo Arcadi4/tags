@@ -2,10 +2,14 @@
 
 The MCP server behind [Tags](../README.md). Expands `#tag` markers in user prompts into XML directives so agents receive composable, location-aware instructions.
 
-The server exposes two tools:
+The server exposes four tools:
 
 - **`parse_tags`** — always-on prompt expander. Replaces `#tag` markers with `<tag/>` references and prepends each tag's directive body once at the top.
+- **`list_tags`** — read-only inventory. Returns the currently loaded tags, each annotated with its origin (`builtin` / `global` / `workspace`).
+- **`show_tag`** — inspect a single tag's body. Useful for verifying what `#name` will expand to without rewriting a full prompt.
 - **`load_tag_creation_skill`** — preflight for tag-authoring tasks. Returns the canonical guide for writing new `.agents/tags/*.md` files.
+
+The `workspace` argument on `parse_tags`, `list_tags`, and `show_tag` is optional. When omitted the server uses the workspace it was launched in (resolved per [Workspace Resolution](#workspace-resolution)).
 
 For end-user install instructions across OpenCode, Claude Code, Codex, Gemini CLI, Qoder, etc., see the [project README](../README.md). This document is for running the server directly, configuring a local checkout, or contributing.
 
