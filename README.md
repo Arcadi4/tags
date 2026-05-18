@@ -13,23 +13,19 @@ Tags are designed to work together with skills (or slash commands). While skills
 
 ## How Tags Work
 
-The original prompt with tags:
+You type a message with tags:
 
-```text
-Implement a management API with endpoints of /v2/admin, /v2/auth, /v2/public,
-etc. #generalzite. The existing OAuth #explore should be compatible with the new API.
-```
+> Implement a management API with endpoints of /v2/admin, /v2/auth, /v2/public,
+etc. `#generalzite`. The existing OAuth `#explore` should be compatible with the new API.
 
-The final prompt exposed to the agent:
+It will turn into:
 
 ```xml
 <generalize>
-This is a demonstration by non-exhaustive examples. Please picture the
-complete intent by analyzing the context and propose a complete enumeration
-for the user.
+This is a demonstration by non-exhaustive examples. [...tag content]
 </generalize>
 <explore>
-Explore the codebase to clarify the mentioned concept.
+Explore the codebase to clarify the mentioned concept. [...tag content]
 </explore>
 Implement a new management API with endpoints of /v2/admin, /v2/auth, /v2/public,
 etc. <generalize/>. The existing OAuth <explore/> should be compatible with the new API.
