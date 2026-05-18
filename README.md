@@ -35,7 +35,7 @@ Implement a new management API with endpoints of /v2/admin, /v2/auth, /v2/public
 etc. <generalize/>. The existing OAuth <explore/> should be compatible with the new API.
 ```
 
-As you can see, tags are injected exactly where they are called. This allows it to be a precise punctuation on your prompt.
+Tags are injected exactly where they are called. This allows it to serve as a precise annotation of your prompt.
 
 We can expect these from the agent:
 
@@ -54,6 +54,8 @@ According to your requirements and research on the codebase, I will implement:
 ```
 
 ## Getting Started
+
+Any agent able to configure MCP servers can use tags.
 
 ### OpenCode
 
@@ -112,6 +114,32 @@ Add the following (or similar) to your agent's config file:
   }
 }
 ```
+
+## Built-in Tags
+
+Tags are released with several built-in tags for your out-of-the-box experience:
+
+| Tag Name | Usage |
+| --- | --- |
+| `#fyi` | When you are providing a piece of information, but don't want the agent to over-respond. |
+| `#explore` | You want the agent to search the codebase for this part. |
+| `#example` | When you are giving examples and want the agent to infer your intent based on them. |
+| `#use-skill` | When you want the agent to use one specific or relevant skill. |
+| `#btw` | To mark an information as worth knowing but insignificant to the current discussion. |
+
+You can turn them off by using the command `npx -y @agent-tags/mcp --no-builtin-tags` to start the MCP. Or, you can override these tags by writing your own global tag with the same name.
+
+## Create Your Own Tag
+
+A tag is a `.md` or `.txt` file placed under `.agents/tags`. The filename is the tag name, and the file's content will be the tag body. It is recommended that each tag body does not exceed 600 characters.
+
+### Global Tags
+
+These tags will always be discovered and loaded. Add global tags by adding files under `~/.agents/tags`. For Windows users, it is `C:\Users\UserName\.agents\tags`.
+
+### Project Tags
+
+Add files under `<workspace>/.agents/tags`. Project-scoped tags are only discovered when you are working under that directory. If a project tag's name collides with a global tag, the project tag shadows the global tag.
 
 ## SDK
 
