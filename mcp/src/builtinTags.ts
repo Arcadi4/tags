@@ -26,15 +26,9 @@ export const BUILTIN_TAGS: TagDef[] = [
     sourcePath: "builtin:use-skill",
   },
   {
-    key: "aside",
+    key: "btw",
     body: "This is a side note from the main thread of conversation. Make a response if necessary, but do not let it take up more than 10% of your output or distract from the main task unless it is directly relevant.",
-    rawName: "aside",
-    sourcePath: "builtin:aside",
-  },
-  {
-    key: "critique",
-    body: "This is a critique of your previous response. Use it to improve your next response, but do not let it take up more than 10% of your output or distract from the main task unless it is directly relevant.",
-    rawName: "critique",
-    sourcePath: "builtin:critique",
+    rawName: "btw",
+    sourcePath: "builtin:btw",
   },
 ];
