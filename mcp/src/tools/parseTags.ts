@@ -8,23 +8,35 @@ import { FilesystemTagSource } from "../services/filesystemTagSource.js";
 import { MergedTagSource } from "../services/mergedTagSource.js";
 import { rewritePrompt } from "../services/promptRewriter.js";
 import { globalTagsDir, workspaceTagsDir } from "../constants.js";
+import { BuiltinTagSource } from "../services/builtinTagSource.js";
+import { BUILTIN_TAGS } from "../builtinTags.js";
 
 export interface ParseTagsDeps {
   sourceFactory?: (workspace: string) => TagSource;
+  useBuiltinTags?: boolean;
 }
 
-function defaultSourceFactory(workspace: string): TagSource {
-  return new MergedTagSource([
+function defaultSourceFactory(workspace: string, useBuiltinTags: boolean): TagSource {
+  const sources: TagSource[] = [
     new FilesystemTagSource(globalTagsDir()),
     new FilesystemTagSource(workspaceTagsDir(workspace)),
-  ]);
+  ];
+
+  if (useBuiltinTags) {
+    sources.unshift(new BuiltinTagSource(BUILTIN_TAGS));
+  }
+
+  return new MergedTagSource(sources);
 }
 
 export function registerParseTagsTool(
   server: McpServer,
   deps: ParseTagsDeps = {},
 ): void {
-  const factory = deps.sourceFactory ?? defaultSourceFactory;
+  const useBuiltinTags = deps.useBuiltinTags ?? true;
+  const factory =
+    deps.sourceFactory ??
+    ((workspace: string) => defaultSourceFactory(workspace, useBuiltinTags));
 
   server.registerTool(
     "parse_tags",

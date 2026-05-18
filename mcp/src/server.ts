@@ -10,27 +10,38 @@ import {
 } from "./constants.js";
 import { BuiltinTagSource } from "./services/builtinTagSource.js";
 import { BUILTIN_TAGS } from "./builtinTags.js";
-import { USE_BUILTIN_TAGS } from "./index.js";
 import { TagSource } from "./services/tagSource.js";
+
+export interface ServerOptions {
+  useBuiltinTags?: boolean;
+}
 
 export async function buildServer(
   workspaceForInstructions: string,
+  options: ServerOptions = {},
 ): Promise<McpServer> {
-  const instructions = await buildInstructions(workspaceForInstructions);
+  const useBuiltinTags = options.useBuiltinTags ?? true;
+  const instructions = await buildInstructions(
+    workspaceForInstructions,
+    useBuiltinTags,
+  );
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
     { instructions },
   );
-  registerParseTagsTool(server);
+  registerParseTagsTool(server, { useBuiltinTags });
   return server;
 }
 
-async function buildInstructions(workspace: string): Promise<string> {
+async function buildInstructions(
+  workspace: string,
+  useBuiltinTags: boolean,
+): Promise<string> {
   let tagSources : TagSource[] = [
     new FilesystemTagSource(globalTagsDir()),
     new FilesystemTagSource(workspaceTagsDir(workspace)),
   ];
-  if (USE_BUILTIN_TAGS) {
+  if (useBuiltinTags) {
     tagSources.unshift(new BuiltinTagSource(BUILTIN_TAGS)); // ensure built-in tags have lowest precedence so they can be overridden by user-defined tags without needing to disable them entirely
   }
 
