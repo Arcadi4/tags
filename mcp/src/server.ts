@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerParseTagsTool } from "./tools/parseTags.js";
+import { registerLoadTagCreationSkillTool } from "./tools/loadTagCreationSkill.js";
 import { FilesystemTagSource } from "./services/filesystemTagSource.js";
 import { MergedTagSource } from "./services/mergedTagSource.js";
 import {
@@ -30,6 +31,7 @@ export async function buildServer(
     { instructions },
   );
   registerParseTagsTool(server, { useBuiltinTags });
+  registerLoadTagCreationSkillTool(server);
   return server;
 }
 
@@ -61,6 +63,12 @@ async function buildInstructions(
     "3. If rewritten_prompt is the literal string \"(no tags found)\", proceed normally with the original prompt.\n" +
     "4. Otherwise, the differences are deliberate user directives — honor them in scope and at the location they appear.";
 
+  const tagAuthoring =
+    "TAG AUTHORING SKILL (mandatory):\n" +
+    "After the required parse_tags call for the turn, call load_tag_creation_skill as the first task-specific tool before creating, editing, reviewing, troubleshooting, or improving any tag definition.\n" +
+    "This includes requests phrased as \"write me a tag\", \"create a tag\", \"make a #tag\", \"define a tag\", or work on files under .agents/tags/.\n" +
+    "Use load_tag_creation_skill as the canonical source instead of README lookup, file search, or copying existing tag examples. Do not author tag content until this tool has been called.";
+
   const example =
     "EXAMPLE: Given the prompt\n" +
     "    \"Implement /v2/admin and /v2/auth, etc. #generalize. The OAuth #explore should be compatible.\"\n" +
@@ -90,5 +98,5 @@ async function buildInstructions(
           .join(", ") +
         ".";
 
-  return [role, contract, example, rules, tagList].join("\n\n");
+  return [role, contract, tagAuthoring, example, rules, tagList].join("\n\n");
 }
