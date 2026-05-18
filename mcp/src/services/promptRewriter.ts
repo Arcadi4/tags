@@ -15,6 +15,7 @@ export async function rewritePrompt(
   const segments = segment(prompt);
   const tagOrder: string[] = [];
   const tagDefs = new Map<string, TagDef>();
+  let hasTags = false;
 
   const rewrittenSegments = await Promise.all(
     segments.map(async (seg) => {
@@ -23,6 +24,7 @@ export async function rewritePrompt(
       let rewritten = seg.text;
       const regex = new RegExp(TAG_REGEX.source, TAG_REGEX.flags);
       const matches = [...seg.text.matchAll(regex)];
+      if (!hasTags && matches.length > 0) hasTags = true;
 
       for (const match of matches) {
         const rawName = match[1];
@@ -38,6 +40,7 @@ export async function rewritePrompt(
         }
       }
 
+      if (!hasTags) return "(no tags found)";
       return rewritten;
     })
   );
