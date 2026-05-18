@@ -1,5 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { parseTagsInputShape, parseTagsOutputShape } from "../schemas/parseTags.js";
+import {
+  parseTagsInputShape,
+  parseTagsOutputShape,
+} from "../schemas/parseTags.js";
 import { TagSource } from "../services/tagSource.js";
 import { FilesystemTagSource } from "../services/filesystemTagSource.js";
 import { MergedTagSource } from "../services/mergedTagSource.js";
@@ -13,11 +16,14 @@ export interface ParseTagsDeps {
 function defaultSourceFactory(workspace: string): TagSource {
   return new MergedTagSource([
     new FilesystemTagSource(globalTagsDir()),
-    new FilesystemTagSource(workspaceTagsDir(workspace))
+    new FilesystemTagSource(workspaceTagsDir(workspace)),
   ]);
 }
 
-export function registerParseTagsTool(server: McpServer, deps: ParseTagsDeps = {}): void {
+export function registerParseTagsTool(
+  server: McpServer,
+  deps: ParseTagsDeps = {},
+): void {
   const factory = deps.sourceFactory ?? defaultSourceFactory;
 
   server.registerTool(
@@ -33,16 +39,16 @@ export function registerParseTagsTool(server: McpServer, deps: ParseTagsDeps = {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
-        openWorldHint: false
-      }
+        openWorldHint: false,
+      },
     },
     async ({ workspace, prompt }) => {
       const source = factory(workspace);
       const rewritten_prompt = await rewritePrompt(prompt, source);
       return {
         content: [{ type: "text", text: rewritten_prompt }],
-        structuredContent: { rewritten_prompt }
+        structuredContent: { rewritten_prompt },
       };
-    }
+    },
   );
 }

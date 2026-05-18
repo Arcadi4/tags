@@ -2,23 +2,39 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerParseTagsTool } from "./tools/parseTags.js";
 import { FilesystemTagSource } from "./services/filesystemTagSource.js";
 import { MergedTagSource } from "./services/mergedTagSource.js";
-import { SERVER_NAME, SERVER_VERSION, globalTagsDir, workspaceTagsDir } from "./constants.js";
+import {
+  SERVER_NAME,
+  SERVER_VERSION,
+  globalTagsDir,
+  workspaceTagsDir,
+} from "./constants.js";
+import { BuiltinTagSource } from "./services/builtinTagSource.js";
+import { BUILTIN_TAGS } from "./builtinTags.js";
+import { USE_BUILTIN_TAGS } from "./index.js";
+import { TagSource } from "./services/tagSource.js";
 
-export async function buildServer(workspaceForInstructions: string): Promise<McpServer> {
+export async function buildServer(
+  workspaceForInstructions: string,
+): Promise<McpServer> {
   const instructions = await buildInstructions(workspaceForInstructions);
   const server = new McpServer(
     { name: SERVER_NAME, version: SERVER_VERSION },
-    { instructions }
+    { instructions },
   );
   registerParseTagsTool(server);
   return server;
 }
 
 async function buildInstructions(workspace: string): Promise<string> {
-  const source = new MergedTagSource([
+  let tagSources : TagSource[] = [
     new FilesystemTagSource(globalTagsDir()),
-    new FilesystemTagSource(workspaceTagsDir(workspace))
-  ]);
+    new FilesystemTagSource(workspaceTagsDir(workspace)),
+  ];
+  if (USE_BUILTIN_TAGS) {
+    tagSources.unshift(new BuiltinTagSource(BUILTIN_TAGS)); // ensure built-in tags have lowest precedence so they can be overridden by user-defined tags without needing to disable them entirely
+  }
+
+  const source = new MergedTagSource(tagSources);
   const tags = await source.list();
   const intro =
     "This server expands inline #tag markers in user prompts into XML directives. " +

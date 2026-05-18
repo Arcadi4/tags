@@ -1,7 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 
-export const SERVER_NAME = "agent-tags";
+export const SERVER_NAME = "tags";
 export const SERVER_VERSION = "0.1.0";
 export const DEFAULT_TAGS_DIR = ".agents/tags";
 // Matches #tag-name at word boundary, not preceded by word char — e.g. matches "#explore" but not "x#explore"

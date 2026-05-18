@@ -7,6 +7,7 @@ import type { TagDef, TagKey, TagSource } from "./tagSource.js";
 export class MergedTagSource implements TagSource {
   private merged: Map<TagKey, TagDef> | null = null;
 
+  // overwrite priority follows the array order: later sources override earlier ones on key collision
   constructor(private sources: ReadonlyArray<TagSource>) {}
 
   private async ensureLoaded(): Promise<Map<TagKey, TagDef>> {
@@ -18,7 +19,7 @@ export class MergedTagSource implements TagSource {
       for (const tag of tags) {
         const existing = merged.get(tag.key);
         if (existing) {
-          console.error(
+          console.warn(
             `[agent-tags] cross-source override on "${tag.key}": ${existing.sourcePath} → ${tag.sourcePath}`,
           );
         }
