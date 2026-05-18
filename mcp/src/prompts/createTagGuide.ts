@@ -1,9 +1,6 @@
-export const CREATE_TAG_SKILL = [
-  "---",
-  "name: creating-tags",
-  "description: Use when creating, editing, reviewing, troubleshooting, or improving reusable #tag definitions for the Tags prompt expansion system",
-  "---",
-  "",
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+export const CREATE_TAG_GUIDE = [
   "# Creating Tags",
   "",
   "## Overview",
@@ -22,7 +19,7 @@ export const CREATE_TAG_SKILL = [
   "- `#btw` for low-salience side notes",
   "- A project-specific convention, domain hint, or repeated instruction that should compose with other tags",
   "",
-  "Do not create a tag for a full multi-turn workflow. Use a skill or slash command for that.",
+  "Do not create a tag for a full multi-turn workflow. Use an agent skill, slash command, or other workflow primitive for that.",
   "",
   "## Tag Anatomy",
   "",
@@ -74,7 +71,7 @@ export const CREATE_TAG_SKILL = [
   "Use many steps, templates, sections, completion criteria, and long workflow rules...",
   "```",
   "",
-  "Why bad: the parser treats metadata and headings as literal tag body, not configuration. Long workflow rules belong in skills.",
+  "Why bad: the parser treats metadata and headings as literal tag body, not configuration. Long workflow rules do not belong in tags.",
   "",
   "## Quick Reference",
   "",
@@ -98,8 +95,8 @@ export const CREATE_TAG_SKILL = [
   "",
   "## Common Mistakes",
   "",
-  "**Mistake: Writing a skill as a tag.**  ",
-  "If the instruction needs phases, tools, verification gates, or multi-turn discipline, create a skill instead. A tag should be a local intent annotation.",
+  "**Mistake: Writing a workflow as a tag.**  ",
+  "If the instruction needs phases, tools, verification gates, or multi-turn discipline, do not make it a tag. A tag should be a local intent annotation.",
   "",
   "**Mistake: Adding YAML metadata.**  ",
   "Tags do not parse frontmatter yet. Metadata becomes literal instruction text and can confuse the agent.",
@@ -120,3 +117,26 @@ export const CREATE_TAG_SKILL = [
   "",
   "Expected behavior: `parse_tags` prepends an `<infer-examples>...</infer-examples>` block and replaces the inline marker with `<infer-examples/>` while preserving the rest of the prompt.",
 ].join("\n");
+
+export function registerCreateTagGuidePrompt(server: McpServer): void {
+  server.registerPrompt(
+    "create-tag-guide",
+    {
+      title: "Create Tag Guide",
+      description:
+        "Canonical guide for creating, editing, reviewing, troubleshooting, or improving reusable #tag definitions for the Tags prompt expansion system.",
+    },
+    () => ({
+      description: "Canonical guide for creating reusable #tag definitions.",
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: CREATE_TAG_GUIDE,
+          },
+        },
+      ],
+    }),
+  );
+}

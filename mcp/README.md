@@ -2,12 +2,12 @@
 
 The MCP server behind [Tags](../README.md). Expands `#tag` markers in user prompts into XML directives so agents receive composable, location-aware instructions.
 
-The server exposes four tools:
+The server exposes three tools and one prompt:
 
 - **`parse_tags`** — always-on prompt expander. Replaces `#tag` markers with `<tag/>` references and prepends each tag's directive body once at the top.
 - **`list_tags`** — read-only inventory. Returns the currently loaded tags, each annotated with its origin (`builtin` / `global` / `workspace`).
 - **`show_tag`** — inspect a single tag's body. Useful for verifying what `#name` will expand to without rewriting a full prompt.
-- **`load_tag_creation_skill`** — preflight for tag-authoring tasks. Returns the canonical guide for writing new `.agents/tags/*.md` files.
+- **`create-tag-guide` prompt** — user-controlled guide for writing new `.agents/tags/*.md` files, exposed through MCP `prompts/list` and `prompts/get`.
 
 The `workspace` argument on `parse_tags`, `list_tags`, and `show_tag` is optional. When omitted the server uses the workspace it was launched in (resolved per [Workspace Resolution](#workspace-resolution)).
 
