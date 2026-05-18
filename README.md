@@ -1,6 +1,6 @@
 # Tags
 
-Tags are active, composable, and atomic agent directions.
+Tags are pieces of proactive, composable, and minimized agent directions. They are your intent amplifier.
 
 ## Why Tags?
 
@@ -35,7 +35,7 @@ Implement a new management API with endpoints of /v2/admin, /v2/auth, /v2/public
 etc. <generalize/>. The existing OAuth <explore/> should be compatible with the new API.
 ```
 
-Tags are injected exactly where they are called. This allows it to serve as a precise annotation of your prompt.
+Tags are injected exactly where they are called, making it a precise annotation to your original prompt.
 
 We can expect these from the agent:
 
