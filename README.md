@@ -10,41 +10,42 @@ Tags are designed to work together with skills (or slash commands). While skills
 - Tags are location-aware, while commands are always scoped around the whole prompt
 - All tags are composable; you can combine as many tags as you want in one prompt.
 - Each tag represents an atomic intent; they do not interfere with each other and confuse the agent.
+- Greatly simplify and speed up prompt writing, especially for complex intents.
 
 ## How Tags Work
 
 You type a message with tags:
 
-> Implement a management API with endpoints of /v2/admin, /v2/auth, /v2/public,
-etc. `#generalzite`. The existing OAuth `#explore` should be compatible with the new API.
+> refactor the auth module `#explore` to use JWT `#justify`
 
-It will turn into:
+It turns into:
 
 ```xml
-<generalize>
-This is a demonstration by non-exhaustive examples. [...tag content]
-</generalize>
 <explore>
-Explore the codebase to clarify the mentioned concept. [...tag content]
+Investigate this concept by searching across the codebase for relevant files,
+reading their contents, and identifying key symbols, patterns, or implementations...
 </explore>
-Implement a new management API with endpoints of /v2/admin, /v2/auth, /v2/public,
-etc. <generalize/>. The existing OAuth <explore/> should be compatible with the new API.
+<justify>
+Justify the adjacent decision. Name the chosen option, the alternatives considered,
+and the criteria that decided between them...
+</justify>
+
+refactor the auth module <explore/> to use JWT <justify/>
 ```
 
-Tags are injected exactly where they are called, making it a precise annotation to your original prompt.
+Each tag's directive is prepended once at the top, and a self-closing marker replaces the `#tag` at its original position — so the agent knows exactly which part of your prompt each directive applies to.
 
-We can expect something like this from the agent:
+A few more real examples:
 
-> According to your requirements and research on the codebase, I will implement:
-> - /v2/admin
-> - /v2/admin/management <- enumerated by conventions
-> - /v2/auth
-> - /v2/auth/login
-> - /v2/auth/logout
-> - /v2/auth/legacy <- according to the codebase evidence on OAuth
-> - /v2/users <- inferred from gap-analysis/skill usage
-> - /v2/public
-> - /v2/public/contents <- enumerated by conventions
+```text
+> the migration is backward-compatible #prove
+
+> #deny — the timeout isn't caused by the database
+
+> #discard the current parseConfig — rewrite it with zod
+
+> add rate limiting to /api/upload #explore #goal 100 req/min per user
+```
 
 ## Getting Started
 
