@@ -10,24 +10,26 @@ Tags are designed to work together with skills (or slash commands). While skills
 - Tags are location-aware, while commands are always scoped around the whole prompt
 - All tags are composable; you can combine as many tags as you want in one prompt.
 - Each tag represents an atomic intent; they do not interfere with each other and confuse the agent.
-- Greatly simplify and speed up prompt writing, especially for complex intents.
+- Greatly simplify and speed up prompting, especially for complex intents.
 
 ## How Tags Work
 
-You type a message with tags:
+You type a message containing tags:
 
-> refactor the auth module `#explore` to use JWT `#justify`
+```text
+> refactor the auth module #explore to use JWT #justify
+```
 
 It turns into:
 
 ```xml
 <explore>
 Investigate this concept by searching across the codebase for relevant files,
-reading their contents, and identifying key symbols, patterns, or implementations...
+reading their contents, and identifying key symbols, patterns, or implementations [...]
 </explore>
 <justify>
 Justify the adjacent decision. Name the chosen option, the alternatives considered,
-and the criteria that decided between them...
+and the criteria that decided between them [...]
 </justify>
 
 refactor the auth module <explore/> to use JWT <justify/>
@@ -35,7 +37,7 @@ refactor the auth module <explore/> to use JWT <justify/>
 
 Each tag's directive is prepended once at the top, and a self-closing marker replaces the `#tag` at its original position — so the agent knows exactly which part of your prompt each directive applies to.
 
-A few more real examples:
+A few more real-world examples:
 
 ```text
 > the migration is backward-compatible #prove
@@ -111,15 +113,15 @@ Add the following (or similar) to your agent's config file:
 
 ## Built-in Tags
 
-Tags are released with several built-in tags for your out-of-the-box experience:
+We have several built-in tags for your out-of-the-box experience:
 
-| Tag Name | Usage |
-| --- | --- |
-| `#fyi` | When you are providing a piece of information, but don't want the agent to over-respond. |
-| `#explore` | You want the agent to search the codebase for this part. |
-| `#example` | When you are giving examples and want the agent to infer your intent based on them. |
-| `#use-skill` | When you want the agent to use one specific or relevant skill. |
-| `#btw` | For an incidental aside that should inform context without becoming a new request or topic switch. |
+| Tag Name     | Usage                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| `#fyi`       | When you are providing a piece of information, but don't want the agent to over-respond.           |
+| `#explore`   | You want the agent to search the codebase for this part.                                           |
+| `#example`   | When you are giving examples and want the agent to infer your intent based on them.                |
+| `#use-skill` | When you want the agent to use one specific or relevant skill.                                     |
+| `#btw`       | For an incidental aside that should inform context without becoming a new request or topic switch. |
 
 You can turn them off by using the command `npx -y @agent-tags/mcp --no-builtin-tags` to start the MCP. Or, you can override these tags by writing your own global tag with the same name.
 
@@ -139,4 +141,6 @@ Add files under `<workspace>/.agents/tags`. Project-scoped tags are only discove
 
 ## SDK
 
-Integrate tags into the agentic tools via SDK. Intercept the prompt before it is sent, parse and inject tags. This would be a more graceful solution. Coming soon, if we receive positive community responses.
+Coming soon, if we receive positive community responses.
+
+SDK will help integrating tags into the agents. Intercept the prompt before it was sent, parse and inject tags. This would be a more clean and graceful solution.
