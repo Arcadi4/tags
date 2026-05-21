@@ -2,6 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 
 import { TAG_FILE_EXT } from "../constants.js";
+import { parseFrontmatter } from "./frontmatter.js";
 import {
   type TagDef,
   type TagKey,
@@ -57,7 +58,8 @@ export class FilesystemTagSource implements TagSource {
 
       const key = normalizeTagKey(rawName);
       const sourcePath = join(this.tagsDir, entry);
-      const body = await readFile(sourcePath, "utf8");
+      const raw = await readFile(sourcePath, "utf8");
+      const body = parseFrontmatter(raw).content;
 
       if (this.tags.has(key)) {
         console.error(
