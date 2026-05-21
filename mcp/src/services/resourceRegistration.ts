@@ -1,12 +1,33 @@
-import {
-  McpServer,
-  ResourceTemplate,
-} from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { TagDef, TagSource } from "./tagSource.js";
 import { buildTagUri } from "./uriBuilder.js";
-import { classifySource } from "./defaultSourceFactory.js";
+import { classifySource, defaultSourceFactory } from "./defaultSourceFactory.js";
 
 const RESERVED_SCOPES = new Set(["skill", "skills", "system", "meta"]);
+const TAG_SCOPES = new Set(["builtin", "global", "workspace"]);
+type SourceFactory = (workspace: string) => TagSource;
+type TagScope = ReturnType<typeof classifySource>;
+
+function notFound(uri: URL): never {
+  throw new McpError(ErrorCode.InvalidParams, `Resource not found: ${uri.toString()}`);
+}
+
+function isTagScope(value: string | string[] | undefined): value is TagScope {
+  return typeof value === "string" && TAG_SCOPES.has(value);
+}
+
+function tagResource(def: TagDef, startupWorkspace: string) {
+  const scope = classifySource(def.sourcePath, startupWorkspace);
+  if (RESERVED_SCOPES.has(scope)) return null;
+  const mimeType = mimeTypeForTag(def);
+  return {
+    uri: buildTagUri(scope, def.key),
+    name: `tag-${scope}-${def.key}`,
+    description: "Tag definition",
+    mimeType,
+  };
+}
 
 export function mimeTypeForTag(def: TagDef): string {
   if (def.sourcePath.startsWith("builtin:")) return "text/markdown";
@@ -16,7 +37,7 @@ export function mimeTypeForTag(def: TagDef): string {
 
 export async function registerTagResources(
   server: McpServer,
-  sourceFactory: (workspace: string) => TagSource,
+  sourceFactory: SourceFactory = (workspace) => defaultSourceFactory(workspace, true),
   startupWorkspace: string,
 ): Promise<void> {
   const source = sourceFactory(startupWorkspace);
@@ -43,19 +64,9 @@ export async function registerTagResources(
     list: async () => {
       const listedTags = await source.list();
       return {
-        resources: listedTags.flatMap((def) => {
-          const scope = classifySource(def.sourcePath, startupWorkspace);
-          if (RESERVED_SCOPES.has(scope)) return [];
-          const mimeType = mimeTypeForTag(def);
-          return [
-            {
-              uri: buildTagUri(scope, def.key),
-              name: `tag-${scope}-${def.key}`,
-              description: "Tag definition",
-              mimeType,
-            },
-          ];
-        }),
+        resources: listedTags
+          .map((def) => tagResource(def, startupWorkspace))
+          .filter((resource) => resource !== null),
       };
     },
   });
@@ -64,27 +75,24 @@ export async function registerTagResources(
     "tag-template",
     template,
     { description: "Tag definition", mimeType: "text/markdown" },
-    async (_uri, variables) => {
-      const scope = String(variables.scope);
-      const key = String(variables.name);
+    async (uri, variables) => {
+      const { scope, name } = variables;
+      if (!isTagScope(scope) || typeof name !== "string") notFound(uri);
+
       const def = (await source.list()).find((candidate) => {
         const candidateScope = classifySource(
           candidate.sourcePath,
           startupWorkspace,
         );
-        return candidateScope === scope && candidate.key === key;
+        return candidateScope === scope && candidate.key === name;
       });
 
+      if (!def) notFound(uri);
+
+      const resourceUri = buildTagUri(scope, name);
+      const mimeType = mimeTypeForTag(def);
       return {
-        contents: def
-          ? [
-              {
-                uri: buildTagUri(scope as ReturnType<typeof classifySource>, key),
-                mimeType: mimeTypeForTag(def),
-                text: def.body,
-              },
-            ]
-          : [],
+        contents: [{ uri: resourceUri, mimeType, text: def.body }],
       };
     },
   );
