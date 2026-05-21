@@ -1,17 +1,16 @@
-// MCP server instructions are quite unreliable in practice (many clients drop them entirely, at least I know OpenCode does), so here we keep the server instructions concise and short. All necessary details are included in the per-tool descriptions.
+// Server instructions are unreliable in practice — many clients (OpenCode confirmed)
+// drop them entirely. The full picture lives in per-tool descriptions and resource
+// metadata, which clients render reliably. Keep this string short and meta-cognitive.
 export const SERVER_INSTRUCTIONS = [
-  "This server exposes three tools and one prompt:",
-  "- parse_tags: always-on prompt expander. Call this every turn on the user's verbatim prompt before doing other work; if `#tag-name` markers appear in the rewritten output as `<name/>` placeholders with `<name>...body...</name>` blocks at the top, treat those bodies as authoritative directives and follow them at the location each `<name/>` appears.",
-  "- list_tags: read-only inventory. Call when you need to know which tags are currently defined (e.g. user asks 'what tags do I have', or you suspect an unexpected miss). Each entry is annotated with its origin: 'builtin' | 'global' | 'workspace'. Workspace overrides global, which overrides builtin.",
-  "- show_tag: inspect a single tag's body for verification or debugging. Use list_tags first if you don't know the name.",
-  "- create-tag-guide prompt: user-controlled guide for creating or editing `.agents/tags/*.md` files. Use prompts/list and prompts/get to retrieve it when the user asks for tag-authoring help.",
+  "This MCP server exposes tag and skill capabilities for agent-tags. Tool and resource",
+  "descriptions are authoritative — query them at runtime rather than relying on this",
+  "instruction block, which some clients drop entirely.",
   "",
   "Calling rules:",
-  "- Recognize `#tag-name` (or `#tag_name`) as a syntactic marker that requires parse_tags. You do not need to know the tag inventory in advance; unknown names pass through unchanged.",
-  "- The `workspace` argument on parse_tags / list_tags / show_tag is optional. When omitted, the server uses the workspace it was launched in. Pass an explicit absolute path only when the user is operating on a different project root.",
-  "- The tag set is dynamic. Tag definitions live under `~/.agents/tags` (global) and `<workspace>/.agents/tags` (project) and can change between turns. The MCP tool descriptions are intentionally static — query list_tags / show_tag at runtime instead of relying on a baked-in inventory.",
-  "",
-  "Note: some MCP clients drop this instructions field. The per-tool descriptions therefore restate each tool's contract, but the live tag inventory is only available via list_tags / show_tag.",
+  "- The tag set is dynamic. Definitions live under `~/.agents/tags` (global) and",
+  "  `<workspace>/.agents/tags` (project) and may change between turns. Use the live tool",
+  "  and resource surface, not baked-in knowledge.",
+  "- `#tag-name` and `#tag_name` resolve to the same tag.",
 ].join("\n");
 
 export const PARSE_TAGS_DESCRIPTION = [
@@ -141,6 +140,9 @@ export const LIST_TAGS_DESCRIPTION = [
   "BOUNDARY:",
   "- Does not return tag bodies. Use show_tag for that.",
   "- Does not change which tags parse_tags recognizes; this is read-only inspection.",
+  "",
+  "FALLBACK NOTE:",
+  "- This tool is the canonical fallback for clients that do not expose MCP resources to the model. If your client supports MCP resources, the same data is available via `resources/list` (inventory) and `resources/read` (single tag body). Resources also surface in `@`-mention pickers in compatible UIs. Prefer resources when available; reach for this tool when they are not.",
 ].join("\n");
 
 export const SHOW_TAG_DESCRIPTION = [
@@ -159,6 +161,35 @@ export const SHOW_TAG_DESCRIPTION = [
   "BOUNDARY:",
   "- Returns one tag at a time. Use list_tags for the full inventory.",
   "- Read-only; does not modify any tag file.",
+  "",
+  "FALLBACK NOTE:",
+  "- This tool is the canonical fallback for clients that do not expose MCP resources to the model. If your client supports MCP resources, the same data is available via `resources/list` (inventory) and `resources/read` (single tag body). Resources also surface in `@`-mention pickers in compatible UIs. Prefer resources when available; reach for this tool when they are not.",
+].join("\n");
+
+export const PARSE_SKILL_TAGS_DESCRIPTION = [
+  "Load an Agent Skill from an absolute filesystem path and return its body with any inline `#tag` markers expanded against a skill-local tag source. Use this whenever you load a skill — even if your runtime has its own skill loader. The returned body is what should drive the skill's behavior, with any `<tag-name/>` directives in place.",
+  "",
+  "INPUTS:",
+  "- path: absolute filesystem path to the skill's `SKILL.md`. The host agent already knows where its skill files live; pass the path verbatim. Relative paths are rejected.",
+  "- useBuiltinTags (optional, default true): include built-in tags (`#fyi`, `#explore`, `#example`, `#use-skill`, `#btw`) in the skill-local source. Set to false for strict isolation.",
+  "",
+  "OUTPUT:",
+  "- found: true if the SKILL.md was loaded; false if the path is missing, unreadable, or relative.",
+  "- skill (when found): { path, name, description, body, hasBundledTags, expanded }. `body` is the SKILL.md content with frontmatter stripped, and with `#tag` markers rewritten as `<tag/>` placeholders preceded by `<tag>...body...</tag>` headers when the body contained any. `expanded` is true iff rewriting occurred.",
+  "",
+  "BEHAVIOR:",
+  "- Tag isolation is guaranteed. The skill-local tag source includes ONLY (a) the bundled tags shipped at `<dirname(path)>/tags/*.{md,txt}` and (b) the five built-in tags (when `useBuiltinTags` is true). User-defined global and workspace tags are intentionally NOT visible to skill bodies — this prevents user tag conventions from contaminating skill semantics.",
+  "- Skill-bundled tags shadow built-ins of the same name within that skill's expansion only.",
+  "- Frontmatter is stripped from the body before tag expansion. Frontmatter fields (e.g. `name`, `description`) are extracted into the structured response but are NOT part of the body.",
+  "",
+  "WHY THIS TOOL EXISTS:",
+  "- The host agent already discovers skills through its own conventions (`.agents/skills/`, `.claude/skills/`, `.cursor/skills/`, etc.). This tool does not re-discover them. Its value is tag-aware parsing of the SKILL.md body, which the agent's native skill loader does not perform.",
+  "- If you have already loaded a skill through another path and notice `#tag` markers in its body, re-call this tool with the same `path` to obtain the expanded version.",
+  "",
+  "BOUNDARY:",
+  "- Path-only by design. There is no `name` argument. The agent owns discovery; this tool owns parsing.",
+  "- Returns only the SKILL.md body. Companion files (`scripts/`, `references/`, `assets/`) are NOT read by this tool.",
+  "- Missing or unreadable path returns `{ found: false }` rather than throwing.",
 ].join("\n");
 
 export const CREATE_TAG_GUIDE = [
@@ -202,11 +233,29 @@ export const CREATE_TAG_GUIDE = [
   "",
   "Current parser limits:",
   "",
-  "- No YAML frontmatter parsing. Do not add frontmatter to tag files.",
+  "- Optional YAML frontmatter is permitted but not required. All fields are optional. The body of the tag is whatever follows the closing `---`. Tags without frontmatter are treated as body-only (existing behavior).",
+  "- Frontmatter fields are not interpreted by the parser today. They serve as author-facing metadata only (e.g., notes, version markers, audience hints).",
   "- No semantic Markdown parsing. Headings are just body text.",
   "- Keep ordinary tags under about 600 characters.",
   "- Tags in inline code spans and triple-backtick code fences are not expanded.",
   "- Tag bodies are currently expanded one pass; do not rely on nested `#other-tag` references unless recursive expansion is explicitly supported.",
+  "",
+  "## Skill-Bundled Tags",
+  "",
+  "Skills can ship their own tags under `<skill-dir>/tags/*.{md,txt}`. These tags are scoped to the skill — they are NOT visible to the user's global or workspace tag inventory, and they do NOT shadow tags with the same name elsewhere.",
+  "",
+  "When `parse_skill_tags` loads a skill, the skill's own tag vocabulary is composed with the built-in tags only. Skill authors can therefore rely on the following built-in tags being available inside their skill bodies:",
+  "",
+  "- `#fyi` — accept information silently",
+  "- `#explore` — investigate locally",
+  "- `#example` — non-exhaustive demonstration set",
+  "- `#use-skill` — load a relevant skill",
+  "- `#btw` — incidental aside",
+  "",
+  "User-defined global and workspace tags are intentionally not visible to skill bodies. This isolation prevents user tag conventions from contaminating skill semantics.",
+  "",
+  "A skill-bundled tag with the same name as a built-in shadows the built-in within that skill's expansion only.",
+  "",
   "",
   "## Core Pattern",
   "",
@@ -259,8 +308,6 @@ export const CREATE_TAG_GUIDE = [
   "**Mistake: Writing a workflow as a tag.**  ",
   "If the instruction needs phases, tools, verification gates, or multi-turn discipline, do not make it a tag. A tag should be a local intent annotation.",
   "",
-  "**Mistake: Adding YAML metadata.**  ",
-  "Tags do not parse frontmatter yet. Metadata becomes literal instruction text and can confuse the agent.",
   "",
   "**Mistake: Making one tag depend on another.**  ",
   "Prefer composing tags in the user prompt: `#example #explore`. Do not hide required composition inside a tag body unless recursive expansion is implemented and documented.",
