@@ -4,6 +4,9 @@
     "tags-debug": {
       "type": "local",
       "command": ["node", "mcp/dist/index.js"]
+    },
+    "tags": {
+      "enabled": false
     }
   }
 }
