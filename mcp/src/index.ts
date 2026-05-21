@@ -14,7 +14,7 @@ async function main(): Promise<void> {
   const workspace = resolveStartupWorkspace();
   const flags = process.argv.slice(2);
   const useBuiltinTags = !flags.includes("--no-builtin-tags");
-  const server = buildServer(workspace, { useBuiltinTags });
+  const server = await buildServer(workspace, { useBuiltinTags });
   const transport = new StdioServerTransport();
 
   await server.connect(transport);
