@@ -11,3 +11,6 @@ dist
 .opencode
 .sisyphus
 .agents/skills
+
+# built-in candidates tested locally
+.agents/tags
