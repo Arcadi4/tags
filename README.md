@@ -125,6 +125,18 @@ We have several built-in tags for your out-of-the-box experience:
 
 You can turn them off by using the command `npx -y @agent-tags/mcp --no-builtin-tags` to start the MCP. Or, you can override these tags by writing your own global tag with the same name.
 
+## Resources
+
+In addition to the tool-based interface, every loaded tag is also available as an MCP resource at `tag://{scope}/{name}` where `scope` is one of `builtin`, `global`, or `workspace`. Clients with MCP resource support (Cursor, Claude Desktop) can discover and read tags through `resources/list` and `resources/read`, including in `@`-mention pickers. The existing `parse_tags`, `list_tags`, and `show_tag` tools remain as fallbacks for clients without resource support.
+
+## Skills
+
+The MCP server exposes `parse_skill_tags` to load Agent Skills with tag-aware bodies. Skills follow the [agentskills.io](https://agentskills.io) convention.
+
+- **Path-only contract**: pass the absolute path to a `SKILL.md` file. The host agent already knows where its skills live (`.agents/skills/`, `.claude/skills/`, etc.) — it passes the path; the MCP server does not re-discover skills.
+- **Tag expansion**: any `#tag` markers in the skill body are expanded using a skill-local tag source. Built-in tags (`#fyi`, `#explore`, `#example`, `#use-skill`, `#btw`) are available by default. Skill authors can also ship `<skill-dir>/tags/*.md` for skill-local vocabulary.
+- **Isolation**: user-defined global and workspace tags are intentionally NOT visible to skill bodies, preventing personal conventions from contaminating skill semantics.
+
 ## Create Your Own Tag
 
 A tag is a `.md` or `.txt` file placed under `.agents/tags`. The filename is the tag name, and the file's content will be the tag body. It is recommended that each tag body does not exceed 600 characters.
