@@ -8,7 +8,7 @@ import {
   classifySource,
   defaultSourceFactory,
 } from "../services/defaultSourceFactory.js";
-import { LIST_TAGS_DESCRIPTION } from "../prompts/catalog.js";
+import { LIST_TAGS_DESCRIPTION } from "../prompts/prompt.js";
 
 export interface ListTagsDeps {
   sourceFactory?: (workspace: string) => TagSource;

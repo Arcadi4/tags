@@ -7,7 +7,7 @@ import { registerCreateTagGuidePrompt } from "./prompts/createTagGuide.js";
 import { registerTagResources } from "./services/resourceRegistration.js";
 import { defaultSourceFactory } from "./services/defaultSourceFactory.js";
 import { SERVER_NAME, SERVER_VERSION } from "./constants.js";
-import { SERVER_INSTRUCTIONS } from "./prompts/catalog.js";
+import { SERVER_INSTRUCTIONS } from "./prompts/prompt.js";
 
 export interface ServerOptions {
   useBuiltinTags?: boolean;

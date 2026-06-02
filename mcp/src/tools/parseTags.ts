@@ -6,7 +6,7 @@ import {
 import { TagSource } from "../services/tagSource.js";
 import { rewritePrompt } from "../services/promptRewriter.js";
 import { defaultSourceFactory } from "../services/defaultSourceFactory.js";
-import { PARSE_TAGS_DESCRIPTION } from "../prompts/catalog.js";
+import { PARSE_TAGS_DESCRIPTION } from "../prompts/prompt.js";
 
 export interface ParseTagsDeps {
   sourceFactory?: (workspace: string) => TagSource;

@@ -6,12 +6,11 @@ import {
 import { loadSkillFromPath } from "../services/loadSkillFromPath.js";
 import { createSkillLocalTagSource } from "../services/skillLocalTagSource.js";
 import { rewritePrompt } from "../services/promptRewriter.js";
+import { PARSE_SKILL_TAGS_DESCRIPTION } from "../prompts/prompt.js";
 
 // Path-only keeps discovery with the caller, which already knows skill locations.
 // This tool does no name lookup and does not walk agent-specific skill folders.
 // Missing, unreadable, or relative paths resolve to found:false via null loading.
-const description =
-  "Load a skill by absolute filesystem path and return its body with inline #tag markers expanded against a skill-local tag source (builtins + skill-bundled tags). Path-only by design: the host agent owns skill discovery, this tool owns tag-aware parsing.";
 
 export interface ParseSkillTagsDeps {
   useBuiltinTags: boolean;
@@ -22,14 +21,14 @@ export function registerParseSkillTagsTool(
   deps: ParseSkillTagsDeps,
 ): void {
   server.registerTool(
-    "parse_skill_tags",
+    "load_skill",
     {
-      title: "Parse Skill Tags",
-      description,
+      title: "Load Skill with Tags",
+      description: PARSE_SKILL_TAGS_DESCRIPTION,
       inputSchema: parseSkillTagsInputShape,
       outputSchema: parseSkillTagsOutputShape,
       annotations: {
-        title: "Parse Skill Tags",
+        title: "Load Skill with Tags",
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
@@ -50,7 +49,8 @@ export function registerParseSkillTagsTool(
         useBuiltinTags ?? deps.useBuiltinTags,
       );
       const rewritten = await rewritePrompt(skill.body, localSource);
-      const expanded = rewritten !== skill.body && rewritten !== "(no tags found)";
+      const expanded =
+        rewritten !== skill.body && rewritten !== "(no tags found)";
       const body = expanded ? rewritten : skill.body;
 
       return {

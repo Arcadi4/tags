@@ -5,7 +5,7 @@ import {
   classifySource,
   defaultSourceFactory,
 } from "../services/defaultSourceFactory.js";
-import { SHOW_TAG_DESCRIPTION } from "../prompts/catalog.js";
+import { SHOW_TAG_DESCRIPTION } from "../prompts/prompt.js";
 
 export interface ShowTagDeps {
   sourceFactory?: (workspace: string) => TagSource;

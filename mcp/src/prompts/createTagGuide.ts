@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { CREATE_TAG_GUIDE } from "./catalog.js";
+import { CREATE_TAG_GUIDE } from "./prompt.js";
 
 export function registerCreateTagGuidePrompt(server: McpServer): void {
   server.registerPrompt(
